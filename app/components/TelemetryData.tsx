@@ -7,25 +7,38 @@ type TelemetryDataProps = {
 
 export default function TelemetryData({ velocity }: TelemetryDataProps) {
   return (
-    <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-      <h2 className="text-lg font-semibold mb-2">Velocity Data</h2>
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-slate-700 p-3 rounded-lg">
-          <p className="text-gray-400 text-sm">X-AXIS</p>
-          <p className="text-2xl font-mono">
-            {velocity.x} <span className="text-sm">m/s</span>
+    <div className="bg-gray-900 rounded-sm p-4 border border-gray-700">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-bold uppercase tracking-wider">Telemetry Data</h2>
+        <div className="text-xs text-gray-500 uppercase">Secure Channel</div>
+      </div>
+      
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-gray-800 p-3 border border-gray-700 flex flex-col">
+          <div className="flex justify-between">
+            <p className="text-gray-400 text-xs uppercase font-bold">X-Axis</p>
+            <p className="text-xs text-gray-500">VECTOR</p>
+          </div>
+          <p className="text-xl font-mono mt-1">
+            {velocity.x} <span className="text-xs">m/s</span>
           </p>
         </div>
-        <div className="bg-slate-700 p-3 rounded-lg">
-          <p className="text-gray-400 text-sm">Y-AXIS</p>
-          <p className="text-2xl font-mono">
-            {velocity.y} <span className="text-sm">m/s</span>
+        <div className="bg-gray-800 p-3 border border-gray-700 flex flex-col">
+          <div className="flex justify-between">
+            <p className="text-gray-400 text-xs uppercase font-bold">Y-Axis</p>
+            <p className="text-xs text-gray-500">VECTOR</p>
+          </div>
+          <p className="text-xl font-mono mt-1">
+            {velocity.y} <span className="text-xs">m/s</span>
           </p>
         </div>
-        <div className="bg-slate-700 p-3 rounded-lg">
-          <p className="text-gray-400 text-sm">Z-AXIS</p>
-          <p className="text-2xl font-mono">
-            {velocity.z} <span className="text-sm">m/s</span>
+        <div className="bg-gray-800 p-3 border border-gray-700 flex flex-col">
+          <div className="flex justify-between">
+            <p className="text-gray-400 text-xs uppercase font-bold">Z-Axis</p>
+            <p className="text-xs text-gray-500">VECTOR</p>
+          </div>
+          <p className="text-xl font-mono mt-1">
+            {velocity.z} <span className="text-xs">m/s</span>
           </p>
         </div>
       </div>

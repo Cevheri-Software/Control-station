@@ -2,46 +2,62 @@
 import React from "react";
 
 type BatteryStatusProps = {
-  batteryLevel: number;
+  battery: {
+    level: number;
+    voltage: number;
+    temperature: number;
+  };
 };
 
-export default function BatteryStatus({ batteryLevel }: BatteryStatusProps) {
+export default function BatteryStatus({ battery }: BatteryStatusProps) {
   return (
-    <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-      <h2 className="text-lg font-semibold mb-2">Smart Battery</h2>
+    <div className="bg-gray-900 rounded-sm p-4 border border-gray-700">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-bold uppercase tracking-wider">Power Systems</h2>
+        <div className="text-xs text-gray-500 uppercase">Status: Operational</div>
+      </div>
+      
       <div className="relative pt-1">
         <div className="flex mb-2 items-center justify-between">
           <div>
-            <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-green-200 text-green-800">
-              {batteryLevel}%
+            <span className={`text-xs font-mono inline-block py-1 px-2 border ${
+              battery.level > 50
+                ? "border-green-700 text-green-500"
+                : battery.level > 20
+                ? "border-yellow-700 text-yellow-500"
+                : "border-red-700 text-red-500"
+            }`}>
+              {battery.level}%
             </span>
           </div>
           <div className="text-right">
-            <span className="text-xs font-semibold inline-block text-gray-400">
-              EST. TIME: 22 MIN
+            <span className="text-xs font-mono text-gray-400">
+              ETA: 00:22:15
             </span>
           </div>
         </div>
-        <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-slate-700">
+        
+        <div className="overflow-hidden h-1 mb-4 text-xs flex bg-gray-800 border border-gray-700">
           <div
-            style={{ width: `${batteryLevel}%` }}
-            className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center ${
-              batteryLevel > 50
-                ? "bg-green-500"
-                : batteryLevel > 20
-                ? "bg-yellow-500"
-                : "bg-red-500"
+            style={{ width: `${battery.level}%` }}
+            className={`shadow-none flex flex-col text-center whitespace-nowrap justify-center ${
+              battery.level > 50
+                ? "bg-green-700"
+                : battery.level > 20
+                ? "bg-yellow-700"
+                : "bg-red-700"
             }`}
           ></div>
         </div>
+        
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-slate-700 p-2 rounded-lg">
-            <p className="text-gray-400 text-xs">VOLTAGE</p>
-            <p className="font-mono">11.8 V</p>
+          <div className="bg-gray-800 p-2 border border-gray-700">
+            <p className="text-gray-400 text-xs uppercase font-bold">Voltage</p>
+            <p className="font-mono text-sm">{battery.voltage.toFixed(1)}V</p>
           </div>
-          <div className="bg-slate-700 p-2 rounded-lg">
-            <p className="text-gray-400 text-xs">TEMPERATURE</p>
-            <p className="font-mono">32°C</p>
+          <div className="bg-gray-800 p-2 border border-gray-700">
+            <p className="text-gray-400 text-xs uppercase font-bold">Temp</p>
+            <p className="font-mono text-sm">{battery.temperature.toFixed(1)}°C</p>
           </div>
         </div>
       </div>
