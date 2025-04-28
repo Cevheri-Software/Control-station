@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { io } from 'socket.io-client';
 import Image from 'next/image';
 import VideoFeed from './components/VideoFeed';
 import TelemetryData from './components/TelemetryData';
@@ -10,13 +11,19 @@ import SystemStatus from './components/SystemStatus';
 
 export default function Home() {
   // State for handling UI elements (would be connected to actual data in production)
-  const [batteryLevel, setBatteryLevel] = useState(85);
+  const [battery, setBattery] = useState({ level: 85, voltage: 12.4, temperature: 25 });
   const [velocity, setVelocity] = useState({ x: 0, y: 0, z: 0 });
   const [coordinates, setCoordinates] = useState({ lat: 0, lng: 0 });
   const [geoError, setGeoError] = useState<string | null>(null);
   
   useEffect(() => {
     getLocation();
+    const socket = io('http://127.0.0.1:5328', { transports: ['websocket'] });
+    socket.on('connect', () => console.log('Socket connected', socket.id));
+    socket.on('connect_error', (error) => console.error('Socket connection error', error));
+    socket.on('velocity', (data) => setVelocity(data));
+    socket.on('battery', (data) => setBattery(data));
+    return () => { socket.disconnect(); };
   }, []);
 
   const getLocation = () => {
@@ -46,20 +53,18 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col bg-slate-900 text-white p-4">
-      <header className="w-full py-4 border-b border-slate-700">
-        <div className="flex justify-center items-center">
-          <div className="relative">
-            <div className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-              CEVHERI
-            </div>
-            <div className="absolute -top-1 -right-2 w-2 h-2 rounded-full bg-blue-500"></div>
+    <main className="flex min-h-screen flex-col bg-gray-900 text-white p-4">
+      <header className="w-full py-4 border-b border-gray-700 mb-2">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center">
+            <h1 className="text-xl font-bold uppercase tracking-wider">CEVHERI DEFENSE SYSTEMS</h1>
+            <div className="ml-2 bg-green-600 h-2 w-2 rounded-full"></div>
           </div>
-          <h1 className="text-2xl font-bold ml-3">Drone Control Station</h1>
+          <div className="text-sm text-gray-400">MISSION CONTROL STATION</div>
         </div>
       </header>
 
-      <div className="flex flex-col lg:flex-row gap-4 mt-4 h-full flex-grow">
+      <div className="flex flex-col lg:flex-row gap-4 mt-2 h-full flex-grow">
         {/* Left Column: Video Feed and Controls */}
         <div className="flex flex-col lg:w-2/3 gap-4">
           <VideoFeed onBombRelease={handleBombRelease} />
@@ -69,15 +74,14 @@ export default function Home() {
         {/* Right Column: Map and Battery Status */}
         <div className="flex flex-col lg:w-1/3 gap-4">
           <GPSMap coordinates={coordinates} onCenter={getLocation} />
-          <BatteryStatus batteryLevel={batteryLevel} />
+          <BatteryStatus battery={battery} />
           <SystemStatus />
         </div>
       </div>
-      <footer className="mt-4 text-right text-xs text-slate-500 pr-3 pb-2">
-        <div className="inline-block relative">
-          <span className="font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">CEVHERI</span>
-          <span className="ml-1">SYSTEMS</span>
-          <div className="absolute -top-1 -right-4 w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+      <footer className="mt-4 text-right text-xs text-gray-600 pr-3 pb-2">
+        <div className="inline-flex items-center">
+          <span className="font-bold uppercase">CEVHERI SYSTEMS</span>
+          <span className="ml-1 text-gray-500">// CLASSIFIED</span>
         </div>
       </footer>
     </main>

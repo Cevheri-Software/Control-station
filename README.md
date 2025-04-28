@@ -5,6 +5,8 @@
   </a>
 </p>
 
+
+
 <p align="center">Simple Next.js boilerplate that uses <a href="https://flask.palletsprojects.com/">Flask</a> as the API backend.</p>
 
 <br/>
