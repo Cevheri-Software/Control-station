@@ -23,5 +23,5 @@ async def mock_drone_data():
         }
         await asyncio.sleep(1)
 
-# NOTE: This file retained only mock data generation and shared state to avoid duplicate API routes.
+# NB 👍: This file retained only mock data generation and shared state to avoid duplicate API routes.
 # API routes are now defined in `index.py` using FastAPI.

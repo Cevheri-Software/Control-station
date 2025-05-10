@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "flask-dev": "python -m pip install -r requirements.txt && python api/index.py",
+    "flask-dev": "python api/index.py",
     "next-dev": "next dev",
-    "dev": "concurrently \"pnpm run next-dev\" \"pnpm run flask-dev\"",
+    "dev": "concurrently \"next dev\" \"python api/index.py\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

@@ -1,5 +1,7 @@
-pillow==10.3.0
-fastapi==0.110.2
-uvicorn[standard]==0.29.0
-python-socketio[asgi]==5.11.2
-python-multipart==0.0.9
+fastapi==0.104.1
+uvicorn==0.24.0
+python-socketio==5.10.0
+python-multipart==0.0.6
+pydantic==2.4.2
+pymavlink==2.4.37
+mavsdk>=2.0.0
