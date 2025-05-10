@@ -6,15 +6,19 @@ import asyncio
 import random
 import os
 from datetime import datetime
+from api.drone_controller import DroneController
 
 # -----------------------------
 # Shared Drone State
+# to do: Consider using asynchronous file I/O (for example, using aiofiles) to avoid blocking the event loop when saving uploaded files.
 # -----------------------------
 drone_data = {
     "velocity": {"x": 0.0, "y": 0.0, "z": 0.0},
     "battery": {"level": 100.0, "voltage": 12.4, "temperature": 25.0},
     "camera": {"last_frame": None, "timestamp": None},
+    "health": "starting"
 }
+controller: DroneController | None = None
 
 # -----------------------------
 # FastAPI + Socket.IO Setup
@@ -104,6 +108,13 @@ async def get_camera():
     return drone_data["camera"]
 
 
+# RTL ------------------------------------------------------------
+@app.post("/api/rtl")
+async def return_to_launch():
+    await controller.drone.action.return_to_launch()
+    return {"status": "RTL triggered"}
+
+
 # -----------------------------
 # Socket.IO Handlers & Tasks
 # -----------------------------
@@ -120,26 +131,12 @@ async def emit_loop():
         await asyncio.sleep(1)  # 1 Hz
 
 
-async def mock_drone_data():
-    """Generate mock data when real drone in not connected."""
-    while True:
-        drone_data["velocity"] = {
-            "x": random.uniform(-5, 5),
-            "y": random.uniform(-5, 5),
-            "z": random.uniform(0, 2),
-        }
-        drone_data["battery"] = {
-            "level": max(0.0, drone_data["battery"]["level"] - 0.1),
-            "voltage": 12.0 + random.uniform(-0.5, 0.5),
-            "temperature": 25 + random.uniform(0, 5),
-        }
-        await asyncio.sleep(1)
-
-
 # Start background tasks once the API starts up
 @app.on_event("startup")
 async def _on_startup():
-    asyncio.create_task(mock_drone_data())
+    global controller
+    controller = DroneController(drone_data)
+    asyncio.create_task(controller.run())
     asyncio.create_task(emit_loop())
 
 
