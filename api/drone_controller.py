@@ -11,7 +11,9 @@ class DroneController:
         self.altitude   = altitude
         self.rate       = data_rate
         self.url        = sim_url
-        self.drone      = System()
+        # The following now connects to a manually-run mavsdk_server instance
+        # as the bundled one was not found.
+        self.drone      = System(mavsdk_server_address='localhost', port=50051)
 
     async def _connect(self):
         await self.drone.connect(system_address=self.url)
