@@ -1,16 +1,37 @@
 "use client";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 type VideoFeedProps = {
   onBombRelease: () => void;
 };
 
 export default function VideoFeed({ onBombRelease }: VideoFeedProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [zoom, setZoom] = useState<number>(1);
+  const handleZoomIn = () => {
+    setZoom(prev => (prev < 3 ? +(prev + 0.25).toFixed(2) : 3));
+  };
+  const handleZoomOut = () => {
+    setZoom(prev => (prev > 1 ? +(prev - 0.25).toFixed(2) : 1));
+  };
+  useEffect(() => {
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      })
+      .catch(error => console.error("Error accessing webcam:", error));
+    return () => {
+      if (videoRef.current?.srcObject) {
+        (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
   return (
     <div className="bg-black rounded-sm overflow-hidden border border-gray-700 flex-grow relative">
-      <div className="absolute inset-0 flex items-center justify-center">
-        <p className="text-gray-500">Live Camera Feed</p>
-      </div>
+      <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" autoPlay muted playsInline style={{transform: `scale(${zoom})`, transformOrigin: "center center"}} />
+  
       
       {/* Tactical Overlay */}
       <div className="absolute top-0 left-0 right-0 flex justify-between items-start p-3">
@@ -38,7 +59,7 @@ export default function VideoFeed({ onBombRelease }: VideoFeedProps) {
       <div className="absolute bottom-0 left-0 right-0 p-4 bg-black/90 border-t border-gray-800">
         <div className="flex justify-between items-center">
           <div className="flex gap-3">
-            <button className="border border-gray-700 hover:border-gray-500 p-2 rounded-sm flex items-center">
+            <button onClick={handleZoomIn} className="border border-gray-700 hover:border-gray-500 p-2 rounded-sm flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -56,7 +77,7 @@ export default function VideoFeed({ onBombRelease }: VideoFeedProps) {
               </svg>
               <span className="ml-1 text-xs uppercase">Zoom</span>
             </button>
-            <button className="border border-gray-700 hover:border-gray-500 p-2 rounded-sm flex items-center">
+            <button onClick={handleZoomOut} className="border border-gray-700 hover:border-gray-500 p-2 rounded-sm flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -65,18 +86,10 @@ export default function VideoFeed({ onBombRelease }: VideoFeedProps) {
                 stroke="currentColor"
                 className="w-4 h-4 text-gray-400"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3
-                     0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75
-                     0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3
-                     0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5
-                     0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75
-                     0h9.75"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6" />
               </svg>
-              <span className="ml-1 text-xs uppercase">Adjust</span>
+              <span className="ml-1 text-xs uppercase">Zoom Out</span>
             </button>
           </div>
           <button

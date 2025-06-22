@@ -1,47 +1,58 @@
 <p align="center">
   <a href="https://nextjs-flask-starter.vercel.app/">
     <img src="https://assets.vercel.com/image/upload/v1588805858/repositories/vercel/logo.png" height="96">
-    <h3 align="center">Next.js Flask Starter</h3>
+    <h3 align="center">Drone Control Station</h3>
   </a>
 </p>
 
-
-
-<p align="center">Simple Next.js boilerplate that uses <a href="https://flask.palletsprojects.com/">Flask</a> as the API backend.</p>
+<p align="center">Typescript frontend with FastAPI backend for drone control and telemetry monitoring.</p>
 
 <br/>
 
 ## Introduction
 
-This is a hybrid Next.js + Python app that uses Next.js as the frontend and Flask as the API backend. One great use case of this is to write Next.js apps that use Python AI libraries on the backend.
+This is a hybrid Next.js + Python app that provides a web-based drone control station. It uses Next.js as the frontend interface and Flask with MAVSDK as the API backend for drone communication.
+
+## Features
+
+- Real-time drone telemetry monitoring
+- Web-based control interface
+- MAVSDK integration for MAVLink communication
+- Socket.io for real-time data streaming
+- RESTful API endpoints for drone control
 
 ## How It Works
 
-The Python/Flask server is mapped into to Next.js app under `/api/`.
+The Python/Flask server is mapped into to Next.js app under `/api/`. The drone controller uses MAVSDK to communicate with drone systems via MAVLink protocol.
 
 This is implemented using [`next.config.js` rewrites](https://github.com/vercel/examples/blob/main/python/nextjs-flask/next.config.js) to map any request to `/api/:path*` to the Flask API, which is hosted in the `/api` folder.
 
 On localhost, the rewrite will be made to the `127.0.0.1:5328` port, which is where the Flask server is running.
 
-In production, the Flask server is hosted as [Python serverless functions](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/python) on Vercel.
+## QGroundControl Connection
 
-## Demo
+The drone controller connects to **port 14540** (standard drone simulation port) using the connection string `udp://:14540`.
 
-https://nextjs-flask-starter.vercel.app/
+### Connecting QGroundControl:
 
-## Deploy Your Own
+**Option 1: Auto-Connect**
+- QGroundControl should automatically detect and connect to `localhost:14540` if you have a simulator running
 
-You can clone & deploy it to Vercel with one click:
+**Option 2: Manual Connection**
+1. Open QGroundControl
+2. Go to **Application Settings** → **Comm Links**
+3. Create a new connection with:
+   - **Type**: UDP
+   - **Listening Port**: `14540`
+   - **Target Host**: `127.0.0.1` (localhost)
+   - **Target Port**: `14540`
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?demo-title=Next.js%20Flask%20Starter&demo-description=Simple%20Next.js%20boilerplate%20that%20uses%20Flask%20as%20the%20API%20backend.&demo-url=https%3A%2F%2Fnextjs-flask-starter.vercel.app%2F&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F795TzKM3irWu6KBCUPpPz%2F44e0c6622097b1eea9b48f732bf75d08%2FCleanShot_2023-05-23_at_12.02.15.png&project-name=Next.js%20Flask%20Starter&repository-name=nextjs-flask-starter&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexamples%2Ftree%2Fmain%2Fpython%2Fnextjs-flask&from=vercel-examples-repo)
+### Simulator Requirements
 
-## Developing Locally
-
-You can clone & create this repo with the following command
-
-```bash
-npx create-next-app nextjs-flask --example "https://github.com/vercel/examples/tree/main/python/nextjs-flask"
-```
+Before running the application, you need one of the following:
+- **PX4 SITL** simulator running on port 14540
+- **QGroundControl** with simulation mode
+- **MAVSDK server** running manually
 
 ## Getting Started
 
@@ -55,6 +66,12 @@ yarn
 pnpm install
 ```
 
+Install Python dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
 Then, run the development server:
 
 ```bash
@@ -65,16 +82,45 @@ yarn dev
 pnpm dev
 ```
 
+Run the Python API server:
+
+```bash
+python -m api.index
+```
+
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-The Flask server will be running on [http://127.0.0.1:5328](http://127.0.0.1:5328) – feel free to change the port in `package.json` (you'll also need to update it in `next.config.js`).
+The Flask server will be running on [http://127.0.0.1:5328](http://127.0.0.1:5328) – feel free to change the port in `package.json` (you'll also need to update it in `next.config.js`).
+
+## API Endpoints
+
+- `GET /api/python` - Hello world endpoint
+- `GET/POST /api/velocity` - Drone velocity data
+- `GET/POST /api/battery` - Battery telemetry
+- `GET/POST /api/camera` - Camera feed
+- `POST /api/rtl` - Return to launch command
+
+## Troubleshooting
+
+### Import Errors
+If you get `ModuleNotFoundError: No module named 'api'`, make sure to run the Python server as a module:
+```bash
+python -m api.index
+```
+
+### MAVSDK Server Issues
+If you see "mavsdk_server binary not found", you need to either:
+1. Download MAVSDK server from [MAVSDK releases](https://github.com/mavlink/MAVSDK/releases)
+2. Run a drone simulator (PX4 SITL, QGroundControl)
+3. Use the mock mode (modify `api/drone_controller.py`)
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+To learn more about the technologies used:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [Flask Documentation](https://flask.palletsprojects.com/en/1.1.x/) - learn about Flask features and API.
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API
+- [Flask Documentation](https://flask.palletsprojects.com/en/1.1.x/) - learn about Flask features and API
+- [MAVSDK Documentation](https://mavsdk.mavlink.io/) - learn about MAVSDK drone communication
+- [MAVLink Protocol](https://mavlink.io/) - drone communication protocol
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
