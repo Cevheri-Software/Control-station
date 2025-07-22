@@ -25,7 +25,7 @@ controller: DroneController | None = None
 # -----------------------------
 app = FastAPI(title="Drone Control Station API", version="1.0.0")
 
-# CORS settings (open to everything for development)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -34,9 +34,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Async Socket.IO server (compatible with the frontend's socket.io-client)
+
 sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
-# `socket_app` is what we actually run via Uvicorn
+
 socket_app = socketio.ASGIApp(sio, other_asgi_app=app)
 
 # -----------------------------
