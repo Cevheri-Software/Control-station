@@ -126,8 +126,14 @@ async def connect(sid, environ):
 async def emit_loop():
     """Periodically push telemetry to all connected clients."""
     while True:
+        # Add debug logging to see what's being emitted
+        print(f"📡 Emitting velocity: {drone_data['velocity']}")
+        print(f"🔋 Emitting battery: {drone_data['battery']}")
+        print(f"🏥 Health status: {drone_data['health']}")
+        
         await sio.emit("velocity", drone_data["velocity"])
         await sio.emit("battery", drone_data["battery"])
+        await sio.emit("health", drone_data["health"])
         await asyncio.sleep(1)  # 1 Hz
 
 
