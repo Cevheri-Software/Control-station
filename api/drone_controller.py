@@ -95,6 +95,7 @@ class DroneController:
                     "lon": pos.longitude_deg,
                     "abs_alt": pos.absolute_altitude_m,
                 }
+                print(f"📍 Position updated: {self.shared['position']}")
                 print(f"Position: {pos.latitude_deg:.6f}, {pos.longitude_deg:.6f}")
         except Exception as e:
             print(f"Position telemetry error: {e}")

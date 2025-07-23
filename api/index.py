@@ -16,6 +16,7 @@ drone_data = {
     "velocity": {"x": 0.0, "y": 0.0, "z": 0.0},
     "battery": {"level": 100.0, "voltage": 12.4, "temperature": 25.0},
     "camera": {"last_frame": None, "timestamp": None},
+    "position": {"lat": 0.0, "lon": 0.0, "abs_alt": 0.0},  # Added GPS position
     "health": "starting"
 }
 controller: DroneController | None = None
@@ -130,10 +131,12 @@ async def emit_loop():
         print(f"📡 Emitting velocity: {drone_data['velocity']}")
         print(f"🔋 Emitting battery: {drone_data['battery']}")
         print(f"🏥 Health status: {drone_data['health']}")
+        print(f"📍 Emitting position: {drone_data['position']}")
         
         await sio.emit("velocity", drone_data["velocity"])
         await sio.emit("battery", drone_data["battery"])
         await sio.emit("health", drone_data["health"])
+        await sio.emit("position", drone_data["position"])  # Emit position data
         await asyncio.sleep(1)  # 1 Hz
 
 

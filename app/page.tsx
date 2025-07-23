@@ -13,43 +13,40 @@ export default function Home() {
   // State for handling UI elements (would be connected to actual data in production)
   const [battery, setBattery] = useState({ level: 85, voltage: 12.4, temperature: 25 });
   const [velocity, setVelocity] = useState({ x: 0, y: 0, z: 0 });
-  const [coordinates, setCoordinates] = useState({ lat: 0, lng: 0 });
-  const [geoError, setGeoError] = useState<string | null>(null);
+  const [dronePosition, setDronePosition] = useState<{ lat: number; lng: number } | null>(null); // No default coordinates
   
   useEffect(() => {
-    getLocation();
     const socket = io('http://127.0.0.1:5328', { transports: ['websocket'] });
+    
     socket.on('connect', () => console.log('Socket connected', socket.id));
     socket.on('connect_error', (error) => console.error('Socket connection error', error));
+    
+    // Listen for telemetry data
     socket.on('velocity', (data) => setVelocity(data));
     socket.on('battery', (data) => setBattery(data));
+    
+    // Listen for drone position updates from QGroundControl
+    socket.on('position', (data) => {
+      console.log('📍 Received drone position from QGroundControl:', data);
+      if (data.lat !== 0 && data.lon !== 0) {
+        setDronePosition({ lat: data.lat, lng: data.lon });
+      }
+    });
+    
     return () => { socket.disconnect(); };
   }, []);
-
-  const getLocation = () => {
-    if (!navigator.geolocation) {
-      setGeoError("Geolocation is not supported by your browser");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setCoordinates({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        });
-      },
-      (error) => {
-        setGeoError("Unable to retrieve your location");
-        console.error("Geolocation error:", error);
-      }
-    );
-  };
 
   // Function to handle bomb release (just UI feedback for now)
   const handleBombRelease = () => {
     // This would connect to actual bomb release system in production
     alert("Bomb release command initiated!");
+  };
+
+  // Function to center map on drone position
+  const centerOnDrone = () => {
+    if (dronePosition) {
+      console.log('Centering map on drone position:', dronePosition);
+    }
   };
 
   return (
@@ -73,11 +70,23 @@ export default function Home() {
 
         {/* Right Column: Map and Battery Status */}
         <div className="flex flex-col lg:w-1/3 gap-4">
-          <GPSMap coordinates={coordinates} onCenter={getLocation} />
+          {dronePosition ? (
+            <GPSMap coordinates={dronePosition} onCenter={centerOnDrone} />
+          ) : (
+            <div className="bg-gray-900 rounded-sm overflow-hidden border border-gray-700 flex-grow relative h-64">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-gray-500 font-mono text-sm mb-2">WAITING FOR DRONE GPS...</p>
+                  <p className="text-gray-600 font-mono text-xs">Connect QGroundControl to view position</p>
+                </div>
+              </div>
+            </div>
+          )}
           <BatteryStatus battery={battery} />
           <SystemStatus />
         </div>
       </div>
+      
       <footer className="mt-4 text-right text-xs text-gray-600 pr-3 pb-2">
         <div className="inline-flex items-center">
           <span className="font-bold uppercase">CEVHERI SYSTEMS</span>
