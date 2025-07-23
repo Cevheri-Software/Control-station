@@ -112,9 +112,39 @@ async def get_camera():
 # RTL ------------------------------------------------------------
 @app.post("/api/rtl")
 async def return_to_launch():
-    await controller.drone.action.return_to_launch()
-    return {"status": "RTL triggered"}
+    if controller:
+        success = await controller.return_to_launch()
+        return {"status": "RTL triggered" if success else "RTL failed"}
+    return {"status": "Controller not available"}
 
+# Drone Control Endpoints ----------------------------------------
+@app.post("/api/arm")
+async def arm_drone():
+    if controller:
+        success = await controller.arm_drone()
+        return {"status": "Armed successfully" if success else "Arm failed"}
+    return {"status": "Controller not available"}
+
+@app.post("/api/disarm")
+async def disarm_drone():
+    if controller:
+        success = await controller.disarm_drone()
+        return {"status": "Disarmed successfully" if success else "Disarm failed"}
+    return {"status": "Controller not available"}
+
+@app.post("/api/takeoff")
+async def takeoff_drone():
+    if controller:
+        success = await controller.takeoff_drone()
+        return {"status": "Takeoff initiated" if success else "Takeoff failed"}
+    return {"status": "Controller not available"}
+
+@app.post("/api/land")
+async def land_drone():
+    if controller:
+        success = await controller.land_drone()
+        return {"status": "Landing initiated" if success else "Landing failed"}
+    return {"status": "Controller not available"}
 
 # -----------------------------
 # Socket.IO Handlers & Tasks

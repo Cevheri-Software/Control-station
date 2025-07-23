@@ -178,3 +178,68 @@ class DroneController:
         except Exception as e:
             print(f"❌ DroneController error: {e}")
             self.shared["health"] = "error"
+
+    async def arm_drone(self):
+        """Arm the drone"""
+        try:
+            print("🔧 Arming drone...")
+            await self.drone.action.arm()
+            self.shared["health"] = "armed"
+            print("✅ Drone armed successfully")
+            return True
+        except Exception as e:
+            print(f"❌ Arm error: {e}")
+            self.shared["health"] = "arm_error"
+            return False
+
+    async def disarm_drone(self):
+        """Disarm the drone"""
+        try:
+            print("🔧 Disarming drone...")
+            await self.drone.action.disarm()
+            self.shared["health"] = "disarmed"
+            print("✅ Drone disarmed successfully")
+            return True
+        except Exception as e:
+            print(f"❌ Disarm error: {e}")
+            self.shared["health"] = "disarm_error"
+            return False
+
+    async def takeoff_drone(self):
+        """Takeoff the drone"""
+        try:
+            print("🚁 Taking off...")
+            await self.drone.action.takeoff()
+            self.shared["health"] = "taking_off"
+            print("✅ Takeoff initiated")
+            return True
+        except Exception as e:
+            print(f"❌ Takeoff error: {e}")
+            self.shared["health"] = "takeoff_error"
+            return False
+
+    async def land_drone(self):
+        """Land the drone"""
+        try:
+            print("🛬 Landing...")
+            await self.drone.action.land()
+            self.shared["health"] = "landing"
+            print("✅ Landing initiated")
+            return True
+        except Exception as e:
+            print(f"❌ Land error: {e}")
+            self.shared["health"] = "land_error"
+            return False
+
+    async def return_to_launch(self):
+        """Return to launch position"""
+        try:
+            print("🏠 Returning to launch...")
+            await self.drone.action.return_to_launch()
+            self.shared["health"] = "rtl"
+            print("✅ RTL initiated")
+            return True
+        except Exception as e:
+            print(f"❌ RTL error: {e}")
+            self.shared["health"] = "rtl_error"
+            return False

@@ -7,7 +7,7 @@ import VideoFeed from './components/VideoFeed';
 import TelemetryData from './components/TelemetryData';
 import GPSMap from './components/GPSMap';
 import BatteryStatus from './components/BatteryStatus';
-import SystemStatus from './components/SystemStatus';
+import DroneControls from './components/SystemStatus';
 
 export default function Home() {
   // State for handling UI elements (would be connected to actual data in production)
@@ -82,7 +82,7 @@ export default function Home() {
             </div>
           )}
           <BatteryStatus />
-          <SystemStatus />
+          <DroneControls />
         </div>
       </div>
       
