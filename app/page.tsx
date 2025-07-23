@@ -11,7 +11,6 @@ import SystemStatus from './components/SystemStatus';
 
 export default function Home() {
   // State for handling UI elements (would be connected to actual data in production)
-  const [battery, setBattery] = useState({ level: 85, voltage: 12.4, temperature: 25 });
   const [velocity, setVelocity] = useState({ x: 0, y: 0, z: 0 });
   const [dronePosition, setDronePosition] = useState<{ lat: number; lng: number } | null>(null); // No default coordinates
   
@@ -23,7 +22,7 @@ export default function Home() {
     
     // Listen for telemetry data
     socket.on('velocity', (data) => setVelocity(data));
-    socket.on('battery', (data) => setBattery(data));
+    // Note: Battery data is now handled directly in BatteryStatus component
     
     // Listen for drone position updates from QGroundControl
     socket.on('position', (data) => {
@@ -82,7 +81,7 @@ export default function Home() {
               </div>
             </div>
           )}
-          <BatteryStatus battery={battery} />
+          <BatteryStatus />
           <SystemStatus />
         </div>
       </div>
