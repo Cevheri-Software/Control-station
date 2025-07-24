@@ -8,41 +8,156 @@ type VideoFeedProps = {
 export default function VideoFeed({ onBombRelease }: VideoFeedProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [zoom, setZoom] = useState<number>(1);
+  const [streamStatus, setStreamStatus] = useState<string>("connecting");
+  const [streamSource, setStreamSource] = useState<string>("gazebo_sitl");
+
   const handleZoomIn = () => {
     setZoom(prev => (prev < 3 ? +(prev + 0.25).toFixed(2) : 3));
   };
+  
   const handleZoomOut = () => {
     setZoom(prev => (prev > 1 ? +(prev - 0.25).toFixed(2) : 1));
   };
+
+  // Check video stream status
+  const checkStreamStatus = async () => {
+    try {
+      const response = await fetch('http://localhost:5328/api/video-status');
+      const status = await response.json();
+      setStreamStatus(status.status);
+      setStreamSource(status.source);
+      return status.status === "streaming";
+    } catch (error) {
+      console.error("Error checking stream status:", error);
+      setStreamStatus("error");
+      return false;
+    }
+  };
+
   useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+    const initializeVideoStream = async () => {
+      if (!videoRef.current) return;
+
+      // First check if Gazebo stream is available
+      const isStreamAvailable = await checkStreamStatus();
+      
+      if (isStreamAvailable) {
+        console.log("🎥 Connecting to Gazebo SITL MJPEG stream via API...");
+        setStreamStatus("loading");
+
+        // Use FastAPI proxy endpoint instead of direct port
+        const streamUrl = "http://localhost:5328/api/video-stream";
+        videoRef.current.src = streamUrl;
+        try {
+          videoRef.current.load();
+        } catch (e) {
+          console.error("Error loading video stream via API:", e);
         }
-      })
-      .catch(error => console.error("Error accessing webcam:", error));
+
+        videoRef.current.onloadstart = () => {
+          console.log("📺 Gazebo MJPEG stream loading...");
+          setStreamStatus("loading");
+        };
+        
+        videoRef.current.oncanplay = () => {
+          console.log("✅ Gazebo MJPEG stream ready");
+          setStreamStatus("streaming");
+        };
+        
+        videoRef.current.onloadeddata = () => {
+          console.log("📺 MJPEG stream data loaded");
+          setStreamStatus("streaming");
+        };
+        
+        videoRef.current.onerror = (error) => {
+          console.error("❌ Gazebo MJPEG stream error:", error);
+          setStreamStatus("error");
+          // Fallback to webcam if Gazebo stream fails
+          setTimeout(fallbackToWebcam, 1000);
+        };
+        
+      } else {
+        // Fallback to webcam if Gazebo stream is not available
+        console.log("⚠️ Gazebo stream not available, falling back to webcam");
+        fallbackToWebcam();
+      }
+    };
+
+    const fallbackToWebcam = () => {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          if (videoRef.current) {
+            console.log("📹 Using webcam as fallback");
+            videoRef.current.srcObject = stream;
+            setStreamStatus("webcam");
+            setStreamSource("webcam");
+          }
+        })
+        .catch(error => {
+          console.error("Error accessing webcam:", error);
+          setStreamStatus("error");
+        });
+    };
+
+    initializeVideoStream();
+
+    // Periodically check stream status
+    const statusInterval = setInterval(checkStreamStatus, 5000);
+
     return () => {
+      clearInterval(statusInterval);
       if (videoRef.current?.srcObject) {
         (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
       }
     };
   }, []);
+
+  const getStreamStatusColor = () => {
+    switch (streamStatus) {
+      case "streaming": return "bg-green-600";
+      case "loading": return "bg-yellow-600";
+      case "webcam": return "bg-blue-600";
+      case "error": return "bg-red-600";
+      default: return "bg-gray-600";
+    }
+  };
+
+  const getStreamStatusText = () => {
+    switch (streamStatus) {
+      case "streaming": return "Gazebo SITL Feed";
+      case "loading": return "Loading Stream";
+      case "webcam": return "Webcam Fallback";
+      case "error": return "Stream Error";
+      default: return "Connecting";
+    }
+  };
+
   return (
     <div className="bg-black rounded-sm overflow-hidden border border-gray-700 flex-grow relative">
-      <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" autoPlay muted playsInline style={{transform: `scale(${zoom})`, transformOrigin: "center center"}} />
+      <video 
+        ref={videoRef} 
+        className="absolute inset-0 w-full h-full object-cover" 
+        autoPlay 
+        muted 
+        playsInline 
+        style={{
+          transform: `scale(${zoom})`, 
+          transformOrigin: "center center"
+        }} 
+      />
   
-      
       {/* Tactical Overlay */}
       <div className="absolute top-0 left-0 right-0 flex justify-between items-start p-3">
         <div className="bg-black/80 border border-gray-700 p-2 rounded-sm">
           <div className="flex items-center">
-            <div className="h-2 w-2 rounded-full bg-red-600 mr-2 animate-pulse"></div>
-            <p className="text-xs text-gray-300 uppercase tracking-wider">Live Feed - Encrypted</p>
+            <div className={`h-2 w-2 rounded-full mr-2 ${getStreamStatusColor()} ${streamStatus === 'streaming' ? 'animate-pulse' : ''}`}></div>
+            <p className="text-xs text-gray-300 uppercase tracking-wider">{getStreamStatusText()}</p>
           </div>
         </div>
         <div className="bg-black/80 border border-gray-700 p-2 rounded-sm">
-          <p className="text-xs text-gray-300 uppercase">Mission Time: 01:23:45</p>
+          <p className="text-xs text-gray-300 uppercase">
+            Source: {streamSource === 'gazebo_sitl' ? 'PX4 SITL' : (streamSource || 'UNKNOWN').toUpperCase()}
+          </p>
         </div>
       </div>
       
@@ -119,4 +234,4 @@ export default function VideoFeed({ onBombRelease }: VideoFeedProps) {
       </div>
     </div>
   );
-} 
+}

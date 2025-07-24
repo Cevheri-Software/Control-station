@@ -1,6 +1,96 @@
-import asyncio, math, random
+import asyncio, random
+import subprocess
 from mavsdk import System
 from mavsdk.offboard import PositionNedYaw, OffboardError
+
+class VideoStreamBridge:
+    def __init__(self):
+        self.process = None
+        self.is_running = False
+        
+    def start_stream_bridge(self):
+        """Start GStreamer bridge to convert UDP to HTTP stream"""
+        if self.is_running:
+            return
+            
+        try:
+            # Simplified approach: Direct UDP to MJPEG HTTP stream
+            gst_pipeline = [
+                'gst-launch-1.0', '-v',
+                'udpsrc', 'port=5600', 'caps=application/x-rtp,encoding-name=H264,payload=96',
+                '!', 'rtph264depay',
+                '!', 'h264parse',
+                '!', 'avdec_h264',
+                '!', 'videoconvert',
+                '!', 'videoscale',
+                '!', 'video/x-raw,width=640,height=480',
+                '!', 'jpegenc', 'quality=90',
+                '!', 'multipartmux', 'boundary=spionisto',
+                '!', 'tcpserversink', 'host=0.0.0.0', 'port=8080'
+            ]
+            
+            print("🎥 Starting simplified video stream bridge...")
+            self.process = subprocess.Popen(
+                gst_pipeline,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            
+            # Give it a moment to start
+            import time
+            time.sleep(2)
+            
+            # Check if process is still running
+            if self.process.poll() is None:
+                self.is_running = True
+                print("✅ Video stream bridge started on port 8080")
+                return True
+            else:
+                stderr_output = self.process.stderr.read().decode()
+                print(f"❌ Video bridge failed: {stderr_output}")
+                self.is_running = False
+                return False
+                
+        except Exception as e:
+            print(f"❌ Failed to start video bridge: {e}")
+            self.is_running = False
+            return False
+
+    def _start_direct_udp_bridge(self):
+        """Fallback: Direct UDP approach without multicast"""
+        try:
+            gst_pipeline = [
+                'gst-launch-1.0',
+                'udpsrc', 'port=5600',
+                '!', 'application/x-rtp,media=video,clock-rate=90000,encoding-name=H264,payload=96',
+                '!', 'rtph264depay',
+                '!', 'h264parse',
+                '!', 'avdec_h264',
+                '!', 'videoconvert',
+                '!', 'jpegenc', 'quality=80',
+                '!', 'multipartmux',
+                '!', 'tcpserversink', 'host=0.0.0.0', 'port=8080'
+            ]
+            
+            self.process = subprocess.Popen(
+                gst_pipeline,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            
+            import time
+            time.sleep(1)
+            
+            if self.process.poll() is None:
+                self.is_running = True
+                print("✅ Video stream bridge started (direct UDP mode)")
+            else:
+                print("❌ Both video bridge approaches failed")
+                self.is_running = False
+                
+        except Exception as e:
+            print(f"❌ Direct UDP bridge failed: {e}")
+            self.is_running = False
 
 class DroneController:
     def __init__(self, shared_state: dict,
@@ -13,12 +103,17 @@ class DroneController:
         self.url        = sim_url
         # Connect to the MAVSDK server
         self.drone      = System(mavsdk_server_address='localhost', port=50051)
+        # Initialize video bridge
+        self.video_bridge = VideoStreamBridge()
 
     async def _connect(self):
         print("Connecting to drone via MAVSDK server...")
         try:
             await self.drone.connect(system_address=self.url)
             print("Waiting for drone connection...")
+            
+            # Start video bridge when drone connects
+            self.video_bridge.start_stream_bridge()
             
             # Wait for connection with timeout
             timeout = 30  # 30 seconds
@@ -78,6 +173,7 @@ class DroneController:
             asyncio.create_task(self._position_telemetry()),
             asyncio.create_task(self._velocity_telemetry()),
             asyncio.create_task(self._battery_telemetry()),
+            asyncio.create_task(self._attitude_telemetry()),
         ]
         
         try:
@@ -127,6 +223,28 @@ class DroneController:
                 print(f"✅ Battery updated: {self.shared['battery']}")
         except Exception as e:
             print(f"❌ Battery telemetry error: {e}")
+
+    async def _attitude_telemetry(self):
+        """Monitor attitude data and update shared state"""
+        try:
+            print("🧭 Starting attitude telemetry...")
+            async for attitude in self.drone.telemetry.attitude_euler():
+                # Read euler angles in degrees
+                roll_deg = attitude.roll_deg
+                pitch_deg = attitude.pitch_deg
+                yaw_deg = attitude.yaw_deg
+                # Normalize heading to 0-360 degrees
+                heading = (yaw_deg + 360) % 360
+                # Update shared state
+                self.shared["attitude"] = {
+                    "roll": round(roll_deg, 2),
+                    "pitch": round(pitch_deg, 2),
+                    "yaw": round(yaw_deg, 2),
+                    "heading": round(heading, 1)
+                }
+                print(f"🧭 Attitude updated: {self.shared['attitude']}")
+        except Exception as e:
+            print(f"❌ Attitude telemetry error: {e}")
 
     async def _mission_loop(self):
         print("🚁 Starting mission loop...")
