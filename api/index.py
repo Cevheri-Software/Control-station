@@ -10,12 +10,13 @@ from api.drone_controller import DroneController
 
 # -----------------------------
 # Shared Drone State
-# to do: Consider using asynchronous file I/O (for example, using aiofiles) to avoid blocking the event loop when saving uploaded files.
 # -----------------------------
 drone_data = {
     "velocity": {"x": 0.0, "y": 0.0, "z": 0.0},
     "battery": {"level": 100.0, "voltage": 12.4, "temperature": 25.0},
     "camera": {"last_frame": None, "timestamp": None},
+    "position": {"lat": 0.0, "lon": 0.0, "abs_alt": 0.0},
+    "attitude": {"roll": 0.0, "pitch": 0.0, "yaw": 0.0, "heading": 0.0},
     "health": "starting"
 }
 controller: DroneController | None = None
@@ -111,9 +112,49 @@ async def get_camera():
 # RTL ------------------------------------------------------------
 @app.post("/api/rtl")
 async def return_to_launch():
-    await controller.drone.action.return_to_launch()
-    return {"status": "RTL triggered"}
+    if controller:
+        success = await controller.return_to_launch()
+        return {"status": "RTL triggered" if success else "RTL failed"}
+    return {"status": "Controller not available"}
 
+# Drone Control Endpoints ----------------------------------------
+@app.post("/api/arm")
+async def arm_drone():
+    if controller:
+        success = await controller.arm_drone()
+        return {"status": "Armed successfully" if success else "Arm failed"}
+    return {"status": "Controller not available"}
+
+@app.post("/api/disarm")
+async def disarm_drone():
+    if controller:
+        success = await controller.disarm_drone()
+        return {"status": "Disarmed successfully" if success else "Disarm failed"}
+    return {"status": "Controller not available"}
+
+@app.post("/api/takeoff")
+async def takeoff_drone():
+    if controller:
+        success = await controller.takeoff_drone()
+        return {"status": "Takeoff initiated" if success else "Takeoff failed"}
+    return {"status": "Controller not available"}
+
+@app.post("/api/land")
+async def land_drone():
+    if controller:
+        success = await controller.land_drone()
+        return {"status": "Landing initiated" if success else "Landing failed"}
+    return {"status": "Controller not available"}
+
+# Video Status Endpoint (for UI compatibility) -----------------
+@app.get("/api/video-status")
+async def get_video_status():
+    """Return video status - now handled by native Python viewer"""
+    return {
+        "status": "native_viewer", 
+        "message": "Use native Python video viewer: ./run_video_viewer.sh",
+        "port": 5600
+    }
 
 # -----------------------------
 # Socket.IO Handlers & Tasks
@@ -128,10 +169,15 @@ async def emit_loop():
     while True:
         await sio.emit("velocity", drone_data["velocity"])
         await sio.emit("battery", drone_data["battery"])
+        await sio.emit("health", drone_data["health"])
+        await sio.emit("position", drone_data["position"])
+        await sio.emit("attitude", drone_data["attitude"])
         await asyncio.sleep(1)  # 1 Hz
 
 
-# Start background tasks once the API starts up
+# -----------------------------
+# FastAPI Startup
+# -----------------------------
 @app.on_event("startup")
 async def _on_startup():
     global controller
@@ -139,12 +185,9 @@ async def _on_startup():
     asyncio.create_task(controller.run())
     asyncio.create_task(emit_loop())
 
-
 # -----------------------------
 # Entrypoint
 # -----------------------------
 if __name__ == "__main__":
     import uvicorn
-
-    # We pass the ASGI app that includes both FastAPI and Socket.IO layers
     uvicorn.run(socket_app, host="0.0.0.0", port=5328, reload=False)
