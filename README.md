@@ -1,17 +1,17 @@
 <p align="center">
   <a href="https://nextjs-flask-starter.vercel.app/">
-    <img src="https://assets.vercel.com/image/upload/v1588805858/repositories/vercel/logo.png" height="96">
-    <h3 align="center">Drone Control Station</h3>
+    <img src="/icon-192x192.png" height="96" alt="cevheri">
+    <h3 align="center">cevheri</h3>
   </a>
 </p>
 
-<p align="center">Typescript frontend with FastAPI backend for drone control and telemetry monitoring.</p>
+<p align="center">Control station for drone monitoring.</p>
 
 <br/>
 
 ## Introduction
 
-This is a hybrid Next.js + Python app that provides a web-based drone control station. It uses Next.js as the frontend interface and FastAPI with MAVSDK as the API backend for drone communication.
+This is a progressive web application drone station. It uses typescript as the frontend interface and FastAPI with MAVSDK as the API backend for drone communication.
 
 ## Features
 
