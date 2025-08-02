@@ -45,7 +45,7 @@ export default function BatteryStatus() {
   return (
     <div className="bg-gray-900 rounded-sm p-4 border border-gray-700">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-bold uppercase tracking-wider">Power Systems</h2>
+        <h2 className="text-sm font-bold uppercase tracking-wider">Smart Battery System</h2>
         <div className={`text-xs uppercase font-mono ${
           battery.level > 50 ? "text-green-500" :
           battery.level > 20 ? "text-yellow-500" : "text-red-500"
