@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import TelemetryData from './components/TelemetryData';
-import GPSMap from './components/GPSMap';
+import dynamic from 'next/dynamic';
+// Dynamically load GPSMap on client-side only to fix React context errors
+const GPSMap = dynamic(() => import('./components/GPSMap'), { ssr: false });
 import BatteryStatus from './components/BatteryStatus';
 import DroneControls from './components/SystemStatus';
 import Compass from './components/Compass';
