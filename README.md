@@ -1,17 +1,29 @@
 <p align="center">
   <a href="https://nextjs-flask-starter.vercel.app/">
-    <img src="/icon-192x192.png" height="96" alt="cevheri">
+    <img src="public/icon-192x192.png" height="400" alt="cevheri">
     <h3 align="center">cevheri</h3>
   </a>
 </p>
 
-<p align="center">Control station for drone monitoring.</p>
+<p align="center">MOdern ground control station for drone monitoring.</p>
 
 <br/>
 
 ## Introduction
 
 This is a progressive web application drone station. It uses typescript as the frontend interface and FastAPI with MAVSDK as the API backend for drone communication.
+
+## Screenshots
+
+### Control Station Interface
+![Control Station Interface](public/control_station.png)
+
+*App's interface*
+
+### Progressive Web App Installation
+![PWA Install Popup](public/pwa.png)
+
+*Installation button*
 
 ## Features
 
@@ -328,3 +340,20 @@ To learn more about the technologies used:
 - [QGroundControl User Guide](https://docs.qgroundcontrol.com/) - ground control station documentation
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+
+## Citation
+
+If you use this project in your research or work, please cite:
+
+**BibTeX:**
+```bibtex
+@software{rayamah2025gcs,
+  author = {Rayamah, Ibrahim},
+  title = {Modern Ground Control Station for Drone Monitoring},
+  year = {2025},
+  email = {issakaibrahimrayamah@gmail.com},
+  url = {https://github.com/Cevheri-Software/Control-station}
+}
+```
+
+
